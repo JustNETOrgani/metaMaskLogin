@@ -39,7 +39,7 @@ export default {
       this.loadingCertCreationgPage = false
       this.getAccount().then(accounts => {
         this.userAddr = accounts[0]
-        console.log('Address of validator: ', this.userAddr)
+        console.log('User address: ', this.userAddr)
       })
     }
   },
@@ -51,45 +51,63 @@ export default {
     metaMaskLogin () {
       console.log('Attempting MetaMask login...')
       this.metaMaskLoginBtn = true
-      // Generate nonce
-      const nonce = this.getArbitraryNumber()
-      // Hash nonce before proceeding.
-      getHash(nonce).then(nonceHashed => {
-        console.log('Hashed nonce: ', nonceHashed)
-        // Get signature fro user.
-        signatureGenerator.signatureGen(nonceHashed, this.userAddr, (sig) => {
-          const signature = sig.replace(/"/g, '') // Remove the double quotes.
-          console.log('Signature of signer: ', signature)
-          // Recover signer address from signature.
-          const recoveredAddr = recoveredAddrFromSig(nonceHashed, signature)
-          console.log('Address recovered: ', recoveredAddr)
-          if (this.userAddr.toLowerCase() === recoveredAddr.toLowerCase()) {
+      this.$confirm('You would be signing an arbitrary data to prove your blockchain address. There is no blockchain-related cost. Continue?', 'Reminder', {
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'info'
+      }).then(() => {
+        this.$message({
+          type: 'success',
+          message: 'Signing in via MetaMask'
+        })
+        // Generate nonce
+        const nonce = this.getArbitraryNumber()
+        // Hash nonce before proceeding.
+        getHash(nonce).then(nonceHashed => {
+          // console.log('Hashed nonce: ', nonce)
+          // Get signature fro user.
+          signatureGenerator.signatureGen(nonceHashed, this.userAddr, (sig) => {
+            const signature = sig.replace(/"/g, '') // Remove the double quotes.
+            console.log('Signature of signer: ', signature)
+            // Recover signer address from signature.
+            const recoveredAddr = recoveredAddrFromSig(nonceHashed, signature)
+            console.log('Address recovered: ', recoveredAddr)
+            // recoveredAddr can be passed.
+            if (this.userAddr.toLowerCase() === recoveredAddr.toLowerCase()) {
             // Proof successful.
-            this.$message({
-              message: 'Congrats, Proof successful.',
-              type: 'success'
-            })
-            this.$alert('Identity verification successful via addresss: ' + recoveredAddr, 'Proof success', {
-              confirmButtonText: 'OK',
-              callback: action => {
-                this.$message({
-                  type: 'info',
-                  message: 'Welcome'
-                })
-              }
-            })
-            // this.$router.push('/')
-          } else {
-            this.$message.error('Sorry!, Identity proof failed.')
-          }
-          this.metaMaskLoginBtn = false
+              this.$message({
+                message: 'Congrats, Proof successful.',
+                type: 'success'
+              })
+              this.$alert('Identity verification successful via address: ' + recoveredAddr, 'Proof success', {
+                confirmButtonText: 'OK',
+                callback: action => {
+                  this.$message({
+                    type: 'info',
+                    message: 'Welcome'
+                  })
+                }
+              })
+              // Redirect to user landing page.
+            // this.$router.push('/userLanding')
+            } else {
+              this.$message.error('Sorry!, Identity proof failed.')
+            }
+            this.metaMaskLoginBtn = false
+          }).catch(err => {
+            this.metaMaskLoginBtn = false
+            console.log('Error occured during signature generation', err)
+          })
         }).catch(err => {
           this.metaMaskLoginBtn = false
-          console.log('Error occured during signature generation', err)
+          console.log('Error occured during hash generation', err)
         })
-      }).catch(err => {
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: 'MetaMask login canceled'
+        })
         this.metaMaskLoginBtn = false
-        console.log('Error occured during hash generation', err)
       })
     },
     getArbitraryNumber () {

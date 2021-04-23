@@ -89,7 +89,7 @@ export default {
                 }
               })
               // Redirect to user landing page.
-            // this.$router.push('/userLanding')
+              this.$router.push('/userLanding')
             } else {
               this.$message.error('Sorry!, Identity proof failed.')
             }

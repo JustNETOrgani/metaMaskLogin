@@ -15,7 +15,8 @@ async function signatureGen (data, accountToUse, callback) {
   })
 }
 
-signatureGen('data', 'addr', function (sig) {
+// On page load sample input params.
+signatureGen('data', '0xec5bf0f1de02e5fc8fde5adebe12bd4239535b7d', function (sig) {
   console.log('Signature: ', sig)
 })
 
